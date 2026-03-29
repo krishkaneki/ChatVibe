@@ -4,13 +4,14 @@ import dbConnect from '@/lib/db';
 import UserModel from '@/models/User';
 import bcrypt from 'bcryptjs';
 
-export async function GET(_: NextRequest, { params }: { params: { userId: string } }) {
+export async function GET(_: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   try {
+    const { userId } = await params;
     const session = await auth();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     await dbConnect();
-    const user = await UserModel.findById(params.userId)
+    const user = await UserModel.findById(userId)
       .select('-password')
       .lean();
 
@@ -21,13 +22,14 @@ export async function GET(_: NextRequest, { params }: { params: { userId: string
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { userId: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   try {
+    const { userId: routeUserId } = await params;
     const session = await auth();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const userId = (session.user as { id?: string })?.id;
-    if (userId !== params.userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (userId !== routeUserId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     await dbConnect();
     const body = await req.json();
@@ -36,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { userId: st
     delete body.password;
 
     const updated = await UserModel.findByIdAndUpdate(
-      params.userId,
+      routeUserId,
       { $set: body },
       { new: true, select: '-password' }
     ).lean();

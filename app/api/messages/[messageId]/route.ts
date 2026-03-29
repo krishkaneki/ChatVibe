@@ -5,15 +5,16 @@ import MessageModel from '@/models/Message';
 import '@/models/User';
 import '@/models/Conversation';
 
-export async function DELETE(req: NextRequest, { params }: { params: { messageId: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
   try {
+    const { messageId } = await params;
     const session = await auth();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const userId = (session.user as { id?: string })?.id;
     await dbConnect();
 
-    const message = await MessageModel.findById(params.messageId);
+    const message = await MessageModel.findById(messageId);
     if (!message) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     if (message.sender.toString() !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -29,8 +30,9 @@ export async function DELETE(req: NextRequest, { params }: { params: { messageId
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { messageId: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ messageId: string }> }) {
   try {
+    const { messageId } = await params;
     const session = await auth();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -38,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { messageId:
     const { action, emoji } = await req.json();
 
     await dbConnect();
-    const message = await MessageModel.findById(params.messageId);
+    const message = await MessageModel.findById(messageId);
     if (!message) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
     if (action === 'react' && emoji) {

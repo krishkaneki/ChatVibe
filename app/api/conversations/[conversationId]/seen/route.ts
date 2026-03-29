@@ -7,9 +7,10 @@ import '@/models/Conversation';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
+    const { conversationId } = await params;
     const session = await auth();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -18,7 +19,7 @@ export async function POST(
 
     await MessageModel.updateMany(
       {
-        conversation: params.conversationId,
+        conversation: conversationId,
         'readBy.user': { $ne: userId },
         sender: { $ne: userId },
       },

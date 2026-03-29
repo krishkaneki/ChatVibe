@@ -7,14 +7,15 @@ import '@/models/User';
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
+    const { conversationId } = await params;
     const session = await auth();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     await dbConnect();
-    const conversation = await ConversationModel.findById(params.conversationId)
+    const conversation = await ConversationModel.findById(conversationId)
       .populate('participants', 'name email image isOnline lastSeen')
       .populate({ path: 'lastMessage', populate: { path: 'sender', select: 'name image' } })
       .lean();
@@ -28,14 +29,15 @@ export async function GET(
 
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
   try {
+    const { conversationId } = await params;
     const session = await auth();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     await dbConnect();
-    await ConversationModel.findByIdAndDelete(params.conversationId);
+    await ConversationModel.findByIdAndDelete(conversationId);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
