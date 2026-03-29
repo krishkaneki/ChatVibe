@@ -6,7 +6,9 @@
     "dev": "concurrently \"next dev\" \"npx ts-node --project tsconfig.server.json server/index.ts\"",
     "dev:next": "next dev",
     "dev:socket": "npx ts-node --project tsconfig.server.json server/index.ts",
+    "build:socket": "tsc -p tsconfig.server.json",
     "build": "next build",
+    "start:socket": "node dist/index.js",
     "start": "next start",
     "lint": "next lint"
   },

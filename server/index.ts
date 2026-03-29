@@ -1,7 +1,16 @@
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
-const httpServer = createServer();
+const httpServer = createServer((req, res) => {
+  const url = req.url || '';
+
+  // Render (and similar hosts) may perform HTTP health checks.
+  // Avoid interfering with Socket.IO's own HTTP handling at /socket.io.
+  if (!url.startsWith('/socket.io')) {
+    res.statusCode = 200;
+    res.end('ok');
+  }
+});
 
 const io = new Server(httpServer, {
   cors: {
@@ -92,7 +101,8 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = parseInt(process.env.SOCKET_PORT || '3001', 10);
+// Render (and many PaaS hosts) require listening on process.env.PORT
+const PORT = parseInt(process.env.PORT || process.env.SOCKET_PORT || '3001', 10);
 httpServer.listen(PORT, () => {
   console.log(`✅ Socket.io server running on port ${PORT}`);
 });
