@@ -2,6 +2,11 @@ import { auth } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import dbConnect from '@/lib/db';
 import ConversationModel from '@/models/Conversation';
+// Import ALL models so Mongoose registers schemas before any .populate() call
+// This is required on Vercel because each serverless function loads in isolation
+import '@/models/Message';
+import '@/models/User';
+import '@/models/FriendRequest';
 import ChatHeader from '@/components/chat/ChatHeader';
 import MessageList from '@/components/chat/MessageList';
 import ChatInput from '@/components/chat/ChatInput';

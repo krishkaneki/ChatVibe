@@ -2,6 +2,9 @@ import { auth } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import dbConnect from '@/lib/db';
 import UserModel from '@/models/User';
+import '@/models/Message';
+import '@/models/Conversation';
+import '@/models/FriendRequest';
 import SettingsClient from './SettingsClient';
 
 export default async function SettingsPage() {
