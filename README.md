@@ -1,223 +1,262 @@
-# ChatVibe 💬✨
+# 
+```
+ ██████╗██╗  ██╗ █████╗ ████████╗██╗   ██╗██╗██████╗ ███████╗
+██╔════╝██║  ██║██╔══██╗╚══██╔══╝██║   ██║██║██╔══██╗██╔════╝
+██║     ███████║███████║   ██║   ██║   ██║██║██████╔╝█████╗  
+██║     ██╔══██║██╔══██║   ██║   ╚██╗ ██╔╝██║██╔══██╗██╔══╝  
+╚██████╗██║  ██║██║  ██║   ██║    ╚████╔╝ ██║██████╔╝███████╗
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝     ╚═══╝  ╚═╝╚═════╝ ╚══════╝
+```
 
-> Real-time chat application built with Next.js 14, Socket.io, MongoDB, and Framer Motion.
+**Connect. Chat. Vibe.**
 
-![ChatVibe Screenshot](https://res.cloudinary.com/dhc52hnqf/image/upload/v1/chatvibe/preview.png)
+A full-stack real-time chat application built with Next.js 14, Socket.io, MongoDB, and Framer Motion.
 
-## 🚀 Features
+---
 
-- **Real-time messaging** with Socket.io
-- **1-on-1 & Group chats**
-- **Typing indicators** with animated dots
-- **Online/offline status** with pulse animation
-- **Read receipts** (double checkmarks)
-- **Message reactions** (emoji)
-- **Image & file sharing** via Cloudinary
-- **Authentication** — Email/Password, Google, GitHub (NextAuth.js v5)
-- **Dark/Light theme** toggle
-- **Framer Motion animations** throughout
-- **Fully responsive** — mobile + desktop
-- **Unread message badges**
-- **Message deletion**
-- **Group creation** with photo upload
+## Live Demo
 
-## 🛠 Tech Stack
+- Frontend: https://chatvibe-online.vercel.app
+- Socket Server: https://chatvibe-gqw1.onrender.com
 
-| Layer | Tech |
-|-------|------|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS |
-| Animations | Framer Motion |
-| Real-time | Socket.io |
-| Auth | NextAuth.js v5 |
-| Database | MongoDB + Mongoose |
-| Cache | Upstash Redis |
-| Storage | Cloudinary |
-| State | Zustand + TanStack Query |
-| Forms | React Hook Form + Zod |
+---
 
-## 📦 Prerequisites
+## Tech Stack
 
-- Node.js 18+
-- MongoDB Atlas account (free tier)
-- Cloudinary account (free tier)
-- Upstash Redis account (free tier)
-- Google OAuth credentials (optional)
-- GitHub OAuth credentials (optional)
+**Frontend**
+- Next.js 14 with App Router
+- TypeScript in strict mode
+- Tailwind CSS for styling
+- Framer Motion for animations
+- Zustand for client state management
+- TanStack Query for server state
+- NextAuth.js v5 for authentication
+- React Hook Form and Zod for form validation
 
-## ⚙️ Setup & Installation
+**Backend**
+- Socket.io server deployed on Render
+- MongoDB with Mongoose ODM
+- Upstash Redis for online status tracking
+- Cloudinary for image and file storage
+- bcryptjs for password hashing
+
+---
+
+## Features
+
+- Real-time messaging powered by Socket.io
+- 1-on-1 and group conversations
+- Live message deletion and emoji reactions without page refresh
+- Image and file sharing via Cloudinary
+- Typing indicators with animated dots
+- Online and offline status tracking
+- Read receipts with double checkmarks
+- Unread message badges per conversation
+- Tab filters for All Chats, Groups, and Unread
+- Authentication via email and password, Google, and GitHub OAuth
+- Dark and light theme toggle
+- Responsive design for mobile and desktop
+- Drag and drop file uploads
+
+---
+
+## Project Structure
+```
+chatvibe/
+├── app/
+│   ├── (auth)/                  # Login and register pages
+│   ├── (main)/                  # Protected app pages
+│   │   ├── chat/                # Chat pages
+│   │   ├── contacts/            # Find people and groups
+│   │   ├── settings/            # User settings
+│   │   └── profile/             # User profile
+│   └── api/                     # REST API routes
+│       ├── auth/                # NextAuth handlers and register
+│       ├── conversations/       # Conversation CRUD and seen tracking
+│       ├── messages/            # Message CRUD and reactions
+│       ├── users/               # User search and updates
+│       └── upload/              # Cloudinary file upload
+├── components/
+│   ├── auth/                    # Login and register forms
+│   ├── chat/                    # Chat header, bubbles, input, typing
+│   ├── sidebar/                 # Sidebar, conversation list and items
+│   └── modals/                  # Create group modal
+├── server/
+│   └── index.ts                 # Socket.io server entry point
+├── models/                      # Mongoose schemas
+├── lib/                         # Database, auth, redis, cloudinary, utils
+├── providers/                   # React context providers
+├── store/                       # Zustand state stores
+├── hooks/                       # Custom React hooks
+└── types/                       # TypeScript type definitions
+```
+
+---
+
+## Local Development Setup
+
+### Prerequisites
+
+- Node.js 18 or higher
+- A MongoDB Atlas account
+- A Cloudinary account
+- An Upstash Redis account
 
 ### 1. Clone the repository
-
 ```bash
 git clone https://github.com/YOUR_USERNAME/chatvibe.git
 cd chatvibe
 ```
 
 ### 2. Install dependencies
-
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
 
 ### 3. Configure environment variables
 
-Copy `.env.example` to `.env.local` and fill in your values:
-
-```bash
-cp .env.example .env.local
-```
-
+Create a `.env.local` file in the root directory and fill in your values:
 ```env
 # Database
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/chatvibe
+MONGODB_URI=your_mongodb_atlas_connection_string
 
 # NextAuth
-NEXTAUTH_SECRET=your-random-secret-min-32-chars
+NEXTAUTH_SECRET=your_random_secret_min_32_chars
 NEXTAUTH_URL=http://localhost:3000
 
-# Google OAuth (optional)
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-# GitHub OAuth (optional)
-GITHUB_CLIENT_ID=your-github-client-id
-GITHUB_CLIENT_SECRET=your-github-client-secret
+# GitHub OAuth
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
 
 # Cloudinary
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 
 # Upstash Redis
-UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
-UPSTASH_REDIS_REST_TOKEN=your-token
+UPSTASH_REDIS_REST_URL=your_upstash_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 
 # Socket Server
 NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
 ```
 
-### 4. Run development servers
+### 4. Run the development servers
 
-You need **two terminal windows**:
+Open two terminal windows.
 
-**Terminal 1 — Next.js app:**
+Terminal 1 — Next.js frontend:
 ```bash
 npm run dev:next
 ```
 
-**Terminal 2 — Socket.io server:**
+Terminal 2 — Socket.io server:
 ```bash
 npm run dev:socket
 ```
 
-Or run both together:
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) 🎉
-
-## 🚀 Deployment
-
-### Deploy Frontend on Vercel
-
-1. Push your code to GitHub
-2. Go to [vercel.com/new](https://vercel.com/new)
-3. Import your repository
-4. Add all environment variables
-5. Click **Deploy**
-
-> ⚠️ Update `NEXTAUTH_URL` to your Vercel URL after deployment
-
-### Deploy Socket Server
-
-Since Vercel is serverless (no WebSocket support), deploy the Socket.io server separately:
-
-**Option A: Railway (recommended)**
-```bash
-# Connect your GitHub repo on railway.app
-# Set start command: npx ts-node --project tsconfig.server.json server/index.ts
-```
-
-**Option B: Render**
-```bash
-# Create Web Service on render.com
-# Build: npm install
-# Start: npx ts-node --project tsconfig.server.json server/index.ts
-```
-
-After deploying socket server, update `NEXT_PUBLIC_SOCKET_URL` in Vercel environment variables.
-
-## 📁 Project Structure
-
-```
-chatvibe/
-├── app/
-│   ├── (auth)/          # Login & Register pages
-│   ├── (main)/          # Protected app pages
-│   │   ├── chat/        # Chat pages
-│   │   ├── contacts/    # Find people
-│   │   └── settings/    # User settings
-│   └── api/             # API routes
-├── components/
-│   ├── auth/            # Auth forms
-│   ├── chat/            # Chat UI components
-│   ├── modals/          # Modal components
-│   └── sidebar/         # Sidebar components
-├── hooks/               # Custom React hooks
-├── lib/                 # Utility libraries
-├── models/              # Mongoose models
-├── providers/           # React context providers
-├── server/              # Socket.io server
-├── store/               # Zustand stores
-└── types/               # TypeScript types
-```
-
-## 🔧 Free Services Used
-
-| Service | Free Tier | Link |
-|---------|-----------|------|
-| MongoDB Atlas | 512MB storage | [mongodb.com/atlas](https://mongodb.com/atlas) |
-| Cloudinary | 25GB storage | [cloudinary.com](https://cloudinary.com) |
-| Upstash Redis | 10K requests/day | [upstash.com](https://upstash.com) |
-| Vercel | Unlimited deployments | [vercel.com](https://vercel.com) |
-| Railway | $5 credit/month | [railway.app](https://railway.app) |
-
-## 🎨 Design System
-
-ChatVibe uses a custom "Luminous Noir" design system:
-
-- **Colors**: Deep obsidians (#0e0e0e) + electric violets (#a8a4ff)
-- **Gradient**: `linear-gradient(135deg, #667eea, #764ba2)`
-- **Typography**: Plus Jakarta Sans (headlines) + Inter (body)
-- **Animations**: Framer Motion with spring physics
-- **Glass morphism**: `backdrop-filter: blur(20px)` on overlays
-
-## 📝 Scripts
-
-```bash
-npm run dev          # Run Next.js + Socket server together
-npm run dev:next     # Next.js only
-npm run dev:socket   # Socket.io server only
-npm run build        # Production build
-npm run start        # Start production server
-npm run lint         # ESLint
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-MIT License — feel free to use this for your own projects!
+Then open http://localhost:3000 in your browser.
 
 ---
 
-Built with ❤️ and ✨ vibes
+## Deployment
+
+### Frontend on Vercel
+
+1. Push the repository to GitHub
+2. Go to vercel.com and import the repository
+3. Add all environment variables from your `.env.local`
+4. Set `NEXTAUTH_URL` to your Vercel production domain
+5. Set `NEXT_PUBLIC_SOCKET_URL` to your Render socket server URL
+6. Deploy
+
+### Socket Server on Render
+
+The socket server lives in `server/index.ts` and is compiled to plain JavaScript before running.
+
+Set these in your Render service settings:
+```
+Build Command:  npm ci && npm run build:socket
+Start Command:  npm run start:socket
+```
+
+No additional environment variables are needed on Render. The `PORT` is injected automatically.
+
+### MongoDB Atlas Network Access
+
+Go to MongoDB Atlas → Network Access → Add IP Address → Allow Access from Anywhere (`0.0.0.0/0`) so both Vercel and Render can connect to your database.
+
+### Google and GitHub OAuth Callbacks
+
+After deploying to Vercel, update your OAuth app settings:
+
+Google Console — add this to Authorized Redirect URIs:
+```
+https://your-app.vercel.app/api/auth/callback/google
+```
+
+GitHub OAuth App — set the callback URL to:
+```
+https://your-app.vercel.app/api/auth/callback/github
+```
+
+---
+
+## Available Scripts
+```bash
+npm run dev            # Run Next.js and socket server together
+npm run dev:next       # Run Next.js only
+npm run dev:socket     # Run socket server only with ts-node
+npm run build          # Build Next.js for production
+npm run build:socket   # Compile socket server TypeScript to dist/
+npm run start:socket   # Run the compiled socket server
+npm run lint           # Run ESLint
+```
+
+---
+
+## Database Schemas
+
+**User** — name, email, hashed password, avatar, bio, online status, friends list, settings
+
+**Conversation** — participants, group info, last message reference, timestamps
+
+**Message** — sender, content, type (text/image/file), reactions, read receipts, soft delete flag
+
+**FriendRequest** — sender, receiver, status (pending/accepted/rejected)
+
+---
+
+## Free Services Used
+
+| Service | Purpose | Free Tier |
+|---------|---------|-----------|
+| Vercel | Frontend hosting | Unlimited deployments |
+| Render | Socket.io server | 750 hours per month |
+| MongoDB Atlas | Database | 512MB storage |
+| Cloudinary | Image and file storage | 25GB |
+| Upstash Redis | Online status caching | 10,000 requests per day |
+
+---
+
+## What Was Changed to Make the Backend Deployable on Render
+
+- Updated `server/index.ts` to use `process.env.PORT` first so Render can inject its required port, with fallback to `SOCKET_PORT` and then `3001`
+- Added a simple HTTP health check response so Render marks the service as healthy instead of failing on startup
+- Added `build:socket` script to `package.json` that compiles TypeScript with `tsc -p tsconfig.server.json`
+- Added `start:socket` script to `package.json` that runs the compiled output with `node dist/index.js`
+- Verified that `tsconfig.server.json` outputs the compiled entry point to `dist/index.js`
+
+---
+
+## License
+
+MIT License. Feel free to use this project for learning or as a base for your own applications.
+
+---
+
+Built by Krish: a student project, built with curiosity and a lot of debugging.
