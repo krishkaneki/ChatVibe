@@ -25,6 +25,9 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
+    // On HTTPS (Vercel), Auth.js uses the __Secure- cookie prefix.
+    // If we don't set this, getToken() looks for the non-secure cookie name and returns null.
+    secureCookie: req.nextUrl.protocol === 'https:',
   });
 
   if (!token) {
