@@ -1,12 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --signature-gradient: linear-gradient(135deg, #667eea, #764ba2);
-  --primary-color: #a8a4ff;
+  /* Accent (theme) primitives */
+  --accent-color: #a8a4ff;
+  --accent-rgb: 168, 164, 255;
+  --accent-dim-rgb: 103, 93, 249;
+
+  /* Used by existing UI for gradients */
+  --signature-gradient: linear-gradient(
+    135deg,
+    rgb(var(--accent-rgb)),
+    rgb(var(--accent-dim-rgb))
+  );
+
+  /* Legacy var (kept for compatibility) */
+  --primary-color: var(--accent-color);
 }
 
 * {
@@ -25,14 +37,24 @@ body {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 /* ── Scrollbar ────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 3px; height: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #484847; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #767575; }
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #484847;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #767575;
+}
 
 /* ── Glass ────────────────────────────────────────────────── */
 .glass-card {
@@ -44,11 +66,11 @@ body {
 
 /* ── Gradients ────────────────────────────────────────────── */
 .signature-gradient {
-  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  background: var(--signature-gradient) !important;
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: var(--signature-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -56,13 +78,16 @@ body {
 
 /* ── Dot pattern ──────────────────────────────────────────── */
 .dot-pattern {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.12) 1px,
+    transparent 1px
+  );
   background-size: 22px 22px;
 }
 
 /* ── Message bubbles ──────────────────────────────────────── */
 .bubble-sent {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: var(--signature-gradient);
   border-radius: 1.5rem 1.5rem 0.3rem 1.5rem;
 }
 
@@ -80,15 +105,28 @@ body {
 
 /* ── Online pulse ─────────────────────────────────────────── */
 @keyframes online-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.7; transform: scale(1.35); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.35);
+  }
 }
-.online-pulse { animation: online-pulse 2s ease-in-out infinite; }
+.online-pulse {
+  animation: online-pulse 2s ease-in-out infinite;
+}
 
 /* ── Shimmer skeleton ─────────────────────────────────────── */
 @keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 .skeleton-shimmer {
   background: linear-gradient(90deg, #1a1919 25%, #262626 50%, #1a1919 75%);
@@ -98,17 +136,29 @@ body {
 
 /* ── Atmospheric shadow ───────────────────────────────────── */
 .atmospheric-shadow {
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 /* ── Scrollbar hide ───────────────────────────────────────── */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 /* ── Mobile touch improvements ────────────────────────────── */
 @media (max-width: 767px) {
-  .mobile-full { width: 100%; }
-  button, a { -webkit-tap-highlight-color: transparent; }
+  .mobile-full {
+    width: 100%;
+  }
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 /* ── Light mode overrides ─────────────────────────────────── */
@@ -117,12 +167,30 @@ body {
   background: #f5f5f5;
   color: #1a1919;
 }
-.light .bg-surface { background-color: #ffffff !important; }
-.light .bg-surface-container { background-color: #f0f0f0 !important; }
-.light .bg-surface-container-low { background-color: #f5f5f5 !important; }
-.light .bg-surface-container-lowest { background-color: #ebebeb !important; }
-.light .bg-surface-container-high { background-color: #e5e5e5 !important; }
-.light .bg-surface-container-highest { background-color: #dcdcdc !important; }
-.light .text-on-surface { color: #1a1919 !important; }
-.light .text-on-surface-variant { color: #555555 !important; }
-.light .bubble-received { background: #e8e8e8; }
+.light .bg-surface {
+  background-color: #ffffff !important;
+}
+.light .bg-surface-container {
+  background-color: #f0f0f0 !important;
+}
+.light .bg-surface-container-low {
+  background-color: #f5f5f5 !important;
+}
+.light .bg-surface-container-lowest {
+  background-color: #ebebeb !important;
+}
+.light .bg-surface-container-high {
+  background-color: #e5e5e5 !important;
+}
+.light .bg-surface-container-highest {
+  background-color: #dcdcdc !important;
+}
+.light .text-on-surface {
+  color: #1a1919 !important;
+}
+.light .text-on-surface-variant {
+  color: #555555 !important;
+}
+.light .bubble-received {
+  background: #e8e8e8;
+}

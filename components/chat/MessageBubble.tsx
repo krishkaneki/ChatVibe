@@ -1,14 +1,14 @@
-'use client';
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
-import { Check, CheckCheck, Trash2, Smile } from 'lucide-react';
-import { Message } from '@/types';
-import { formatTime, getInitials } from '@/lib/utils';
-import axios from 'axios';
-import { useQueryClient } from '@tanstack/react-query';
-import { useSocketContext } from '@/providers/SocketProvider';
-import { toast } from 'sonner';
+"use client";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { Check, CheckCheck, Trash2, Smile } from "lucide-react";
+import { Message } from "@/types";
+import { formatTime, getInitials } from "@/lib/utils";
+import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSocketContext } from "@/providers/SocketProvider";
+import { toast } from "sonner";
 
 interface Props {
   message: Message;
@@ -18,38 +18,51 @@ interface Props {
   conversationId: string;
 }
 
-const QUICK_REACTIONS = ['❤️', '😂', '😮', '😢', '👍', '🔥'];
+const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "👍", "🔥"];
 
-export default function MessageBubble({ message, isSent, isGrouped, currentUserId, conversationId }: Props) {
+export default function MessageBubble({
+  message,
+  isSent,
+  isGrouped,
+  currentUserId,
+  conversationId,
+}: Props) {
   const [showActions, setShowActions] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const queryClient = useQueryClient();
   const { socket } = useSocketContext();
 
   const isRead = message.readBy.some((r) => {
-    const uid = typeof r.user === 'string' ? r.user : r.user?._id;
+    const uid = typeof r.user === "string" ? r.user : r.user?._id;
     return uid && uid !== currentUserId;
   });
 
   // ── Delete — update local cache + broadcast via socket ──────────────────────
   const handleDelete = async () => {
     // Optimistic update
-    queryClient.setQueryData<Message[]>(['messages', conversationId], (old = []) =>
-      old.map((m) => m._id === message._id ? { ...m, isDeleted: true, content: '' } : m)
+    queryClient.setQueryData<Message[]>(
+      ["messages", conversationId],
+      (old = []) =>
+        old.map((m) =>
+          m._id === message._id ? { ...m, isDeleted: true, content: "" } : m,
+        ),
     );
 
     try {
       await axios.delete(`/api/messages/${message._id}`);
 
       // Broadcast deletion to other participants
-      socket?.emit('delete-message', { conversationId, messageId: message._id });
+      socket?.emit("delete-message", {
+        conversationId,
+        messageId: message._id,
+      });
 
       // Refresh conversation list (lastMessage may have changed)
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
     } catch {
       // Revert optimistic update on failure
-      queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
-      toast.error('Failed to delete message');
+      queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
+      toast.error("Failed to delete message");
     }
     setShowActions(false);
   };
@@ -58,18 +71,26 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
   const handleReaction = async (emoji: string) => {
     setShowReactions(false);
     try {
-      const res = await axios.patch(`/api/messages/${message._id}`, { action: 'react', emoji });
+      const res = await axios.patch(`/api/messages/${message._id}`, {
+        action: "react",
+        emoji,
+      });
       const updatedMessage = res.data;
 
       // Update local cache
-      queryClient.setQueryData<Message[]>(['messages', conversationId], (old = []) =>
-        old.map((m) => m._id === message._id ? updatedMessage : m)
+      queryClient.setQueryData<Message[]>(
+        ["messages", conversationId],
+        (old = []) =>
+          old.map((m) => (m._id === message._id ? updatedMessage : m)),
       );
 
       // Broadcast to other participants
-      socket?.emit('react-message', { conversationId, message: updatedMessage });
+      socket?.emit("react-message", {
+        conversationId,
+        message: updatedMessage,
+      });
     } catch {
-      toast.error('Failed to add reaction');
+      toast.error("Failed to add reaction");
     }
   };
 
@@ -79,14 +100,14 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
     groupedReactions[r.emoji] = (groupedReactions[r.emoji] || 0) + 1;
   });
 
-  const initials = getInitials(message.sender?.name || '?');
+  const initials = getInitials(message.sender?.name || "?");
 
   if (message.isDeleted) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-1 px-2`}
+        className={`flex ${isSent ? "justify-end" : "justify-start"} mb-1 px-2`}
       >
         <span className="text-xs text-on-surface-variant/60 italic px-4 py-2 bg-surface-container rounded-2xl border border-surface-variant/20">
           Message deleted
@@ -100,10 +121,13 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
       initial={{ opacity: 0, x: isSent ? 40 : -40 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-      className={`flex ${isSent ? 'flex-row-reverse' : 'flex-row'} items-end gap-2 mb-1 px-2 group`}
+      transition={{ type: "spring", stiffness: 400, damping: 35 }}
+      className={`flex ${isSent ? "flex-row-reverse" : "flex-row"} items-end gap-2 mb-1 px-2 group`}
       onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => { setShowActions(false); setShowReactions(false); }}
+      onMouseLeave={() => {
+        setShowActions(false);
+        setShowReactions(false);
+      }}
     >
       {/* Avatar — only for received, non-grouped */}
       {!isSent ? (
@@ -119,7 +143,7 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
           ) : (
             <div
               className="w-7 h-7 rounded-full shrink-0 mb-1 flex items-center justify-center text-white text-[10px] font-bold"
-              style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
+              style={{ background: "var(--signature-gradient)" }}
             >
               {initials}
             </div>
@@ -129,10 +153,14 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
         )
       ) : null}
 
-      <div className={`flex flex-col max-w-[65%] ${isSent ? 'items-end' : 'items-start'}`}>
+      <div
+        className={`flex flex-col max-w-[65%] ${isSent ? "items-end" : "items-start"}`}
+      >
         {/* Sender name */}
         {!isSent && !isGrouped && (
-          <span className="text-xs text-on-surface-variant mb-1 ml-2">{message.sender?.name}</span>
+          <span className="text-xs text-on-surface-variant mb-1 ml-2">
+            {message.sender?.name}
+          </span>
         )}
 
         <div className="relative">
@@ -144,7 +172,7 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.1 }}
-                className={`absolute top-1 ${isSent ? 'right-full mr-2' : 'left-full ml-2'} flex items-center gap-1 z-20`}
+                className={`absolute top-1 ${isSent ? "right-full mr-2" : "left-full ml-2"} flex items-center gap-1 z-20`}
               >
                 <button
                   onClick={() => setShowReactions(!showReactions)}
@@ -172,7 +200,7 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.9 }}
                 transition={{ duration: 0.12 }}
-                className={`absolute -top-12 ${isSent ? 'right-0' : 'left-0'} flex gap-1 bg-surface-container-high rounded-full px-2 py-1.5 z-30 atmospheric-shadow`}
+                className={`absolute -top-12 ${isSent ? "right-0" : "left-0"} flex gap-1 bg-surface-container-high rounded-full px-2 py-1.5 z-30 atmospheric-shadow`}
               >
                 {QUICK_REACTIONS.map((emoji) => (
                   <button
@@ -188,7 +216,7 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
           </AnimatePresence>
 
           {/* Message bubble */}
-          {message.type === 'image' && message.fileUrl ? (
+          {message.type === "image" && message.fileUrl ? (
             <div className="rounded-2xl overflow-hidden max-w-[280px]">
               <Image
                 src={message.fileUrl}
@@ -198,20 +226,26 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
                 className="object-cover rounded-2xl"
               />
             </div>
-          ) : message.type === 'file' && message.fileUrl ? (
+          ) : message.type === "file" && message.fileUrl ? (
             <a
               href={message.fileUrl}
               target="_blank"
               rel="noopener noreferrer"
               className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm ${
-                isSent ? 'bubble-sent text-white' : 'bubble-received text-on-surface'
+                isSent
+                  ? "bubble-sent text-white"
+                  : "bubble-received text-on-surface"
               }`}
             >
-              📎 {message.content || 'File'}
+              📎 {message.content || "File"}
             </a>
           ) : (
-            <div className={`px-4 py-2.5 ${isSent ? 'bubble-sent text-white' : 'bubble-received text-on-surface'}`}>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
+            <div
+              className={`px-4 py-2.5 ${isSent ? "bubble-sent text-white" : "bubble-received text-on-surface"}`}
+            >
+              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                {message.content}
+              </p>
             </div>
           )}
 
@@ -220,8 +254,8 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-              className={`flex gap-1 mt-1 flex-wrap ${isSent ? 'justify-end' : 'justify-start'}`}
+              transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              className={`flex gap-1 mt-1 flex-wrap ${isSent ? "justify-end" : "justify-start"}`}
             >
               {Object.entries(groupedReactions).map(([emoji, count]) => (
                 <button
@@ -229,7 +263,10 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
                   onClick={() => handleReaction(emoji)}
                   className="text-xs bg-surface-container-high rounded-full px-2 py-0.5 flex items-center gap-0.5 hover:bg-surface-bright transition-colors"
                 >
-                  {emoji} {count > 1 && <span className="text-on-surface-variant">{count}</span>}
+                  {emoji}{" "}
+                  {count > 1 && (
+                    <span className="text-on-surface-variant">{count}</span>
+                  )}
                 </button>
               ))}
             </motion.div>
@@ -237,13 +274,18 @@ export default function MessageBubble({ message, isSent, isGrouped, currentUserI
         </div>
 
         {/* Timestamp + read receipt */}
-        <div className={`flex items-center gap-1 mt-0.5 px-1 ${isSent ? 'flex-row-reverse' : ''}`}>
-          <span className="text-[10px] text-on-surface-variant">{formatTime(message.createdAt)}</span>
-          {isSent && (
-            isRead
-              ? <CheckCheck className="w-3 h-3 text-primary" />
-              : <Check className="w-3 h-3 text-on-surface-variant" />
-          )}
+        <div
+          className={`flex items-center gap-1 mt-0.5 px-1 ${isSent ? "flex-row-reverse" : ""}`}
+        >
+          <span className="text-[10px] text-on-surface-variant">
+            {formatTime(message.createdAt)}
+          </span>
+          {isSent &&
+            (isRead ? (
+              <CheckCheck className="w-3 h-3 text-primary" />
+            ) : (
+              <Check className="w-3 h-3 text-on-surface-variant" />
+            ))}
         </div>
       </div>
     </motion.div>

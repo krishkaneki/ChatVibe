@@ -1,22 +1,35 @@
-'use client';
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, Smile, Send, X, ImageIcon, FileText } from 'lucide-react';
-import { useSocketContext } from '@/providers/SocketProvider';
-import axios from 'axios';
-import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { useSession } from 'next-auth/react';
+"use client";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Paperclip, Smile, Send, X, ImageIcon, FileText } from "lucide-react";
+import { useSocketContext } from "@/providers/SocketProvider";
+import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 interface Props {
   conversationId: string;
   currentUserId: string;
 }
 
-const EMOJI_QUICK = ['😊', '😂', '❤️', '👍', '🔥', '😮', '😢', '🎉', '✨', '💯', '🙏', '😎'];
+const EMOJI_QUICK = [
+  "😊",
+  "😂",
+  "❤️",
+  "👍",
+  "🔥",
+  "😮",
+  "😢",
+  "🎉",
+  "✨",
+  "💯",
+  "🙏",
+  "😎",
+];
 
 export default function ChatInput({ conversationId, currentUserId }: Props) {
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -33,17 +46,17 @@ export default function ChatInput({ conversationId, currentUserId }: Props) {
   // ── Typing indicators ────────────────────────────────────────────────────────
   const stopTyping = useCallback(() => {
     if (isTyping) {
-      socket?.emit('typing-stop', { conversationId, userId: currentUserId });
+      socket?.emit("typing-stop", { conversationId, userId: currentUserId });
       setIsTyping(false);
     }
   }, [isTyping, socket, conversationId, currentUserId]);
 
   const handleTyping = useCallback(() => {
     if (!isTyping) {
-      socket?.emit('typing-start', {
+      socket?.emit("typing-start", {
         conversationId,
         userId: currentUserId,
-        userName: session?.user?.name || 'Someone',
+        userName: session?.user?.name || "Someone",
       });
       setIsTyping(true);
     }
@@ -54,70 +67,79 @@ export default function ChatInput({ conversationId, currentUserId }: Props) {
   useEffect(() => () => clearTimeout(typingTimeout.current), []);
 
   // ── Send message ─────────────────────────────────────────────────────────────
-  const sendMessage = useCallback(async (
-    msgContent = content,
-    type: 'text' | 'image' | 'file' = 'text',
-    fileUrl?: string
-  ) => {
-    const trimmed = msgContent.trim();
-    if (!trimmed && !fileUrl) return;
-    setIsSending(true);
-    stopTyping();
+  const sendMessage = useCallback(
+    async (
+      msgContent = content,
+      type: "text" | "image" | "file" = "text",
+      fileUrl?: string,
+    ) => {
+      const trimmed = msgContent.trim();
+      if (!trimmed && !fileUrl) return;
+      setIsSending(true);
+      stopTyping();
 
-    try {
-      const res = await axios.post('/api/messages', {
-        conversationId,
-        content: trimmed,
-        type,
-        fileUrl,
-      });
+      try {
+        const res = await axios.post("/api/messages", {
+          conversationId,
+          content: trimmed,
+          type,
+          fileUrl,
+        });
 
-      const msg = res.data;
+        const msg = res.data;
 
-      // Add to local cache immediately (sender sees it right away)
-      queryClient.setQueryData<unknown[]>(['messages', conversationId], (old = []) => {
-        const arr = old as { _id: string }[];
-        if (arr.some((m) => m._id === msg._id)) return old;
-        return [...arr, msg];
-      });
+        // Add to local cache immediately (sender sees it right away)
+        queryClient.setQueryData<unknown[]>(
+          ["messages", conversationId],
+          (old = []) => {
+            const arr = old as { _id: string }[];
+            if (arr.some((m) => m._id === msg._id)) return old;
+            return [...arr, msg];
+          },
+        );
 
-      // Broadcast to other participants via socket
-      // IMPORTANT: include conversationId as a top-level field so receivers
-      // can filter by conversation in their handleNewMessage handler
-      socket?.emit('send-message', {
-        ...msg,
-        conversationId, // explicit field — msg.conversation is an ObjectId string
-      });
+        // Broadcast to other participants via socket
+        // IMPORTANT: include conversationId as a top-level field so receivers
+        // can filter by conversation in their handleNewMessage handler
+        socket?.emit("send-message", {
+          ...msg,
+          conversationId, // explicit field — msg.conversation is an ObjectId string
+        });
 
-      // Refresh conversation list sidebar
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        // Refresh conversation list sidebar
+        queryClient.invalidateQueries({ queryKey: ["conversations"] });
 
-      setContent('');
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
+        setContent("");
+        if (textareaRef.current) {
+          textareaRef.current.style.height = "auto";
+        }
+      } catch {
+        toast.error("Failed to send message");
+      } finally {
+        setIsSending(false);
       }
-    } catch {
-      toast.error('Failed to send message');
-    } finally {
-      setIsSending(false);
-    }
-  }, [content, conversationId, socket, queryClient, stopTyping]);
+    },
+    [content, conversationId, socket, queryClient, stopTyping],
+  );
 
   // ── File upload ──────────────────────────────────────────────────────────────
-  const uploadFile = useCallback(async (file: File) => {
-    setUploadProgress(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const res = await axios.post('/api/upload', formData);
-      const type = file.type.startsWith('image/') ? 'image' : 'file';
-      await sendMessage(file.name, type, res.data.url);
-    } catch {
-      toast.error('Upload failed');
-    } finally {
-      setUploadProgress(false);
-    }
-  }, [sendMessage]);
+  const uploadFile = useCallback(
+    async (file: File) => {
+      setUploadProgress(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const res = await axios.post("/api/upload", formData);
+        const type = file.type.startsWith("image/") ? "image" : "file";
+        await sendMessage(file.name, type, res.data.url);
+      } catch {
+        toast.error("Upload failed");
+      } finally {
+        setUploadProgress(false);
+      }
+    },
+    [sendMessage],
+  );
 
   // ── Drag & Drop ──────────────────────────────────────────────────────────────
   const handleDragOver = (e: React.DragEvent) => {
@@ -134,7 +156,7 @@ export default function ChatInput({ conversationId, currentUserId }: Props) {
 
   // ── Keyboard ─────────────────────────────────────────────────────────────────
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
@@ -144,8 +166,8 @@ export default function ChatInput({ conversationId, currentUserId }: Props) {
     setContent(e.target.value);
     handleTyping();
     // Auto-resize
-    e.target.style.height = 'auto';
-    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+    e.target.style.height = "auto";
+    e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
   };
 
   return (
@@ -154,7 +176,7 @@ export default function ChatInput({ conversationId, currentUserId }: Props) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`shrink-0 border-t border-surface-variant/10 transition-colors ${
-        dragOver ? 'bg-primary/5 border-primary/30' : 'glass-input-bar'
+        dragOver ? "bg-primary/5 border-primary/30" : "glass-input-bar"
       }`}
     >
       {/* Drag overlay hint */}
@@ -211,7 +233,6 @@ export default function ChatInput({ conversationId, currentUserId }: Props) {
 
       {/* Main input row */}
       <div className="flex items-end gap-2 px-3 py-3">
-
         {/* Attachment button */}
         <motion.button
           whileHover={{ scale: 1.1 }}
@@ -236,7 +257,7 @@ export default function ChatInput({ conversationId, currentUserId }: Props) {
             if (file) {
               uploadFile(file);
               // Reset so the same file can be selected again
-              e.target.value = '';
+              e.target.value = "";
             }
           }}
         />
@@ -251,7 +272,7 @@ export default function ChatInput({ conversationId, currentUserId }: Props) {
             placeholder="Type a message..."
             rows={1}
             className="w-full bg-surface-container-low rounded-2xl px-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none border-none resize-none no-scrollbar leading-relaxed"
-            style={{ maxHeight: '120px', minHeight: '40px' }}
+            style={{ maxHeight: "120px", minHeight: "40px" }}
           />
         </div>
 
@@ -264,8 +285,8 @@ export default function ChatInput({ conversationId, currentUserId }: Props) {
           title="Emoji"
           className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 ${
             showEmoji
-              ? 'bg-primary/20 text-primary'
-              : 'text-on-surface-variant hover:text-primary hover:bg-surface-container'
+              ? "bg-primary/20 text-primary"
+              : "text-on-surface-variant hover:text-primary hover:bg-surface-container"
           }`}
         >
           <Smile className="w-5 h-5" />
@@ -280,7 +301,7 @@ export default function ChatInput({ conversationId, currentUserId }: Props) {
           disabled={isSending || (!content.trim() && !uploadProgress)}
           title="Send message"
           className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-primary/20 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-          style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
+          style={{ background: "var(--signature-gradient)" }}
         >
           {isSending ? (
             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

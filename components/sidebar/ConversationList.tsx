@@ -1,27 +1,29 @@
-'use client';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useSocketContext } from '@/providers/SocketProvider';
-import ConversationItem from './ConversationItem';
-import { Conversation } from '@/types';
-import { Search } from 'lucide-react';
+"use client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
+import { useSocketContext } from "@/providers/SocketProvider";
+import ConversationItem from "./ConversationItem";
+import { Conversation } from "@/types";
+import { Search } from "lucide-react";
 
-interface Props { userId: string; }
+interface Props {
+  userId: string;
+}
 
-type TabType = 'all' | 'groups' | 'unread';
+type TabType = "all" | "groups" | "unread";
 
 export default function ConversationList({ userId }: Props) {
-  const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<TabType>('all');
+  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<TabType>("all");
   const { socket } = useSocketContext();
   const queryClient = useQueryClient();
 
   const { data: conversations = [] } = useQuery<Conversation[]>({
-    queryKey: ['conversations'],
+    queryKey: ["conversations"],
     queryFn: async () => {
-      const res = await axios.get('/api/conversations');
+      const res = await axios.get("/api/conversations");
       return res.data;
     },
     enabled: !!userId,
@@ -33,42 +35,45 @@ export default function ConversationList({ userId }: Props) {
     if (!socket) return;
 
     const handleNewMessage = () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
     };
 
-    socket.on('new-message', handleNewMessage);
-    socket.on('conversation-updated', handleNewMessage);
-    socket.on('message-read', handleNewMessage);
+    socket.on("new-message", handleNewMessage);
+    socket.on("conversation-updated", handleNewMessage);
+    socket.on("message-read", handleNewMessage);
 
     return () => {
-      socket.off('new-message', handleNewMessage);
-      socket.off('conversation-updated', handleNewMessage);
-      socket.off('message-read', handleNewMessage);
+      socket.off("new-message", handleNewMessage);
+      socket.off("conversation-updated", handleNewMessage);
+      socket.off("message-read", handleNewMessage);
     };
   }, [socket, queryClient]);
 
   // Total unread count for any notification purposes
-  const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount ?? 0), 0);
+  const totalUnread = conversations.reduce(
+    (sum, c) => sum + (c.unreadCount ?? 0),
+    0,
+  );
 
   // Apply tab filter
   const tabFiltered = conversations.filter((c) => {
-    if (activeTab === 'groups') return c.isGroup;
-    if (activeTab === 'unread') return (c.unreadCount ?? 0) > 0;
+    if (activeTab === "groups") return c.isGroup;
+    if (activeTab === "unread") return (c.unreadCount ?? 0) > 0;
     return true; // 'all'
   });
 
   // Apply search filter
   const filtered = tabFiltered.filter((c) => {
     const name = c.isGroup
-      ? c.groupName || ''
-      : c.participants.find((p) => p._id !== userId)?.name || '';
+      ? c.groupName || ""
+      : c.participants.find((p) => p._id !== userId)?.name || "";
     return name.toLowerCase().includes(search.toLowerCase());
   });
 
   const tabs: { key: TabType; label: string }[] = [
-    { key: 'all', label: 'All Chats' },
-    { key: 'groups', label: 'Groups' },
-    { key: 'unread', label: 'Unread' },
+    { key: "all", label: "All Chats" },
+    { key: "groups", label: "Groups" },
+    { key: "unread", label: "Unread" },
   ];
 
   return (
@@ -90,22 +95,24 @@ export default function ConversationList({ userId }: Props) {
       <div className="px-3 flex gap-1.5 mb-2">
         {tabs.map(({ key, label }) => {
           const isActive = activeTab === key;
-          const count = key === 'unread' ? totalUnread : 0;
+          const count = key === "unread" ? totalUnread : 0;
           return (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
               className={`relative text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${
                 isActive
-                  ? 'text-white shadow-sm'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'
+                  ? "text-white shadow-sm"
+                  : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50"
               }`}
-              style={isActive ? { background: 'linear-gradient(135deg, #667eea, #764ba2)' } : {}}
+              style={
+                isActive ? { background: "var(--signature-gradient)" } : {}
+              }
             >
               {label}
-              {key === 'unread' && count > 0 && (
+              {key === "unread" && count > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-error text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                  {count > 9 ? '9+' : count}
+                  {count > 9 ? "9+" : count}
                 </span>
               )}
             </button>
@@ -124,9 +131,13 @@ export default function ConversationList({ userId }: Props) {
               exit={{ opacity: 0 }}
               className="text-center py-10 text-on-surface-variant text-sm"
             >
-              {activeTab === 'unread' ? 'No unread messages 🎉' :
-               activeTab === 'groups' ? 'No groups yet' :
-               search ? 'No results found' : 'No conversations yet'}
+              {activeTab === "unread"
+                ? "No unread messages 🎉"
+                : activeTab === "groups"
+                  ? "No groups yet"
+                  : search
+                    ? "No results found"
+                    : "No conversations yet"}
             </motion.div>
           ) : (
             filtered.map((conv, i) => (

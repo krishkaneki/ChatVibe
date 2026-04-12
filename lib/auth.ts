@@ -50,13 +50,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   session: { strategy: 'jwt' },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) token.id = user.id;
+    async jwt({ token, user, trigger, session }) {
+      // Initial sign-in
+      if (user) {
+        token.id = (user as { id?: string }).id;
+        token.name = user.name;
+        token.email = user.email;
+        // next-auth uses `picture` internally for the image URL in many flows
+        token.picture = (user as { image?: string }).image;
+      }
+
+      // Client-side `useSession().update(...)` support
+      if (trigger === 'update' && session?.user) {
+        token.name = session.user.name ?? token.name;
+        token.email = session.user.email ?? token.email;
+        token.picture = (session.user as { image?: string }).image ?? token.picture;
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.name = (token.name as string) ?? session.user.name;
+        session.user.email = (token.email as string) ?? session.user.email;
+        (session.user as { image?: string }).image = (token.picture as string) ?? (session.user as { image?: string }).image;
       }
       return session;
     },
