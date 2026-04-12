@@ -12,6 +12,9 @@ const client = new MongoClient(process.env.MONGODB_URI!);
 const clientPromise = client.connect();
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // Important for deployments behind proxies (e.g. Vercel) and for non-localhost access.
+  // Helps avoid host/origin mismatches that can break session flows on some clients.
+  trustHost: true,
   adapter: MongoDBAdapter(clientPromise),
   providers: [
     Google({
