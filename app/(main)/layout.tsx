@@ -9,7 +9,10 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   return (
     <SocketProvider>
-      <div className="flex h-[100dvh] w-full bg-surface-container-lowest overflow-hidden min-h-0">
+      <div
+        className="flex h-screen w-full bg-surface-container-lowest overflow-hidden min-h-0"
+        style={{ height: '100dvh' }}
+      >
         <Sidebar session={session} />
         {/* Main content — on mobile, full width with padding-top for hamburger */}
         <main className="flex-1 flex flex-col overflow-hidden min-w-0 min-h-0 pt-0 md:pt-0">

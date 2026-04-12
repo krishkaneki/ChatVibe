@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Socket } from 'socket.io-client';
-import { connectSocket, disconnectSocket, getSocket } from '@/lib/socket';
+import { connectSocket, disconnectSocket } from '@/lib/socket';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -32,6 +32,12 @@ export default function SocketProvider({ children }: { children: React.ReactNode
     if (!userId) return;
 
     const s = connectSocket(userId);
+    if (!s) {
+      setSocket(null);
+      setIsConnected(false);
+      return;
+    }
+
     setSocket(s);
 
     const handleConnect = () => {
