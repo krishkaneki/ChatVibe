@@ -48,8 +48,12 @@ export default function ThemeProvider({
 }) {
   useEffect(() => {
     // Persisted accent color (saved from Settings)
-    const savedAccent = window.localStorage.getItem("chatvibe:accentColor");
-    if (savedAccent) applyAccentToRoot(savedAccent);
+    try {
+      const savedAccent = window.localStorage.getItem("chatvibe:accentColor");
+      if (savedAccent) applyAccentToRoot(savedAccent);
+    } catch {
+      // Some mobile browsers / private mode can throw on localStorage access.
+    }
   }, []);
 
   return (

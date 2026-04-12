@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { MessageSquare, Users, Settings, LogOut, Plus, Menu, X } from 'lucide-react';
 import type { Session } from 'next-auth';
 import { useChatStore } from '@/store/useChatStore';
@@ -11,7 +11,7 @@ import { useSocketContext } from '@/providers/SocketProvider';
 import { useModalStore } from '@/store/useModalStore';
 import ConversationList from './ConversationList';
 import CreateGroupModal from '@/components/modals/CreateGroupModal';
-import { generateAvatarUrl, getInitials } from '@/lib/utils';
+import { getInitials } from '@/lib/utils';
 import Image from 'next/image';
 
 interface SidebarProps { session: Session; }
@@ -24,11 +24,15 @@ const navItems = [
 
 export default function Sidebar({ session }: SidebarProps) {
   const pathname = usePathname();
+  const { data: liveSession } = useSession();
   const { socket } = useSocketContext();
   const { setOnlineUsers, addOnlineUser, removeOnlineUser } = useChatStore();
   const { open, type } = useModalStore();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const userId = (session.user as { id?: string })?.id;
+  const [avatarVersion, setAvatarVersion] = useState(0);
+
+  const effectiveSession = liveSession ?? session;
+  const userId = (effectiveSession.user as { id?: string })?.id;
 
   useEffect(() => {
     if (!socket) return;
@@ -44,8 +48,16 @@ export default function Sidebar({ session }: SidebarProps) {
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  const initials = getInitials(session.user?.name || 'U');
-  const avatarSrc = session.user?.image || '';
+  const initials = getInitials(effectiveSession.user?.name || 'U');
+  const avatarSrc = (effectiveSession.user as { image?: string } | undefined)?.image || '';
+  const avatarDisplaySrc = avatarSrc
+    ? `${avatarSrc}${avatarSrc.includes('?') ? '&' : '?'}v=${avatarVersion || '0'}`
+    : '';
+
+  // Cache-bust sidebar avatar when the image URL changes
+  useEffect(() => {
+    if (avatarSrc) setAvatarVersion(Date.now());
+  }, [avatarSrc]);
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-surface-container-lowest">
@@ -53,8 +65,8 @@ export default function Sidebar({ session }: SidebarProps) {
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
-            {avatarSrc ? (
-              <Image src={avatarSrc} alt={session.user?.name || 'User'} width={36} height={36} className="rounded-full object-cover" />
+            {avatarDisplaySrc ? (
+              <Image src={avatarDisplaySrc} alt={effectiveSession.user?.name || 'User'} width={36} height={36} className="rounded-full object-cover" />
             ) : (
               <div className="w-9 h-9 rounded-full signature-gradient flex items-center justify-center text-white text-sm font-bold shrink-0">
                 {initials}
